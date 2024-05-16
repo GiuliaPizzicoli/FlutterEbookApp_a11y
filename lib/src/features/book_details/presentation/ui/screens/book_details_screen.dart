@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_ebook_app/src/common/common.dart';
 import 'package:flutter_ebook_app/src/features/features.dart';
 import 'package:flutter_icons/flutter_icons.dart';
@@ -37,6 +38,8 @@ class _BookDetailsScreenState extends ConsumerState<BookDetailsScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
+        title: const Text('Book'),
         leading: !canPop && autoRouteTopRoute?.name == 'BookDetailsRoute'
             ? CloseButton(
                 onPressed: () {
@@ -53,36 +56,46 @@ class _BookDetailsScreenState extends ConsumerState<BookDetailsScreen> {
                         (element) => element.id!.t == widget.entry.id!.t,
                       ) !=
                       -1;
-                  return IconButton(
-                    onPressed: () async {
-                      if (favorited) {
-                        ref
-                            .watch(favoritesNotifierProvider.notifier)
-                            .deleteBook(widget.entry.id!.t ?? '');
-                      } else {
-                        ref
-                            .watch(favoritesNotifierProvider.notifier)
-                            .addBook(widget.entry, widget.entry.id!.t ?? '');
-                      }
-                    },
-                    icon: Icon(
-                      favorited ? Icons.favorite : Feather.heart,
-                      color: favorited
-                          ? Colors.red
-                          : context.theme.iconTheme.color,
+                  return MergeSemantics(
+                    child: Semantics(
+                      label: favorited
+                          ? 'Rimuovi dai preferiti'
+                          : 'Aggiungi ai preferiti',
+                      onTap: () {
+                        _addToFavorite(favorited);
+                        SemanticsService.announce(
+                          favorited ? 'Rimosso' : 'Aggiunto',
+                          TextDirection.ltr,
+                        );
+                      },
+                      child: IconButton(
+                        onPressed: () => _addToFavorite(favorited),
+                        icon: Icon(
+                          favorited ? Icons.favorite : Feather.heart,
+                          color: favorited
+                              ? Colors.red
+                              : context.theme.iconTheme.color,
+                        ),
+                      ),
                     ),
                   );
                 },
               ),
-          IconButton(
-            onPressed: () => _share(),
-            icon: const Icon(Feather.share),
+          Semantics(
+            label: 'Condividi',
+            child: IconButton(
+              onPressed: () => _share(),
+              icon: const Icon(Feather.share),
+            ),
           ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
         children: [
+          const Padding(padding: EdgeInsets.only(top: 16)),
+          const _SectionTitle(title: 'Book Info'),
+          const _Divider(),
           const SizedBox(height: 10.0),
           _BookDescriptionSection(
             entry: widget.entry,
@@ -116,6 +129,18 @@ class _BookDetailsScreenState extends ConsumerState<BookDetailsScreen> {
     Share.share('${widget.entry.title!.t} by ${widget.entry.author!.name!.t}'
         'Read/Download ${widget.entry.title!.t} from ${widget.entry.link![3].href}.');
   }
+
+  void _addToFavorite(bool favorited) async {
+    if (favorited) {
+      ref
+          .watch(favoritesNotifierProvider.notifier)
+          .deleteBook(widget.entry.id!.t ?? '');
+    } else {
+      ref
+          .watch(favoritesNotifierProvider.notifier)
+          .addBook(widget.entry, widget.entry.id!.t ?? '');
+    }
+  }
 }
 
 class _Divider extends StatelessWidget {
@@ -147,17 +172,19 @@ class _BookDescriptionSection extends StatelessWidget {
       children: <Widget>[
         Hero(
           tag: imgTag,
-          child: CachedNetworkImage(
-            imageUrl: '${entry.link![1].href}',
-            placeholder: (context, url) => const SizedBox(
+          child: ExcludeSemantics(
+            child: CachedNetworkImage(
+              imageUrl: '${entry.link![1].href}',
+              placeholder: (context, url) => const SizedBox(
+                height: 200.0,
+                width: 130.0,
+                child: LoadingWidget(),
+              ),
+              errorWidget: (context, url, error) => const Icon(Feather.x),
+              fit: BoxFit.cover,
               height: 200.0,
               width: 130.0,
-              child: LoadingWidget(),
             ),
-            errorWidget: (context, url, error) => const Icon(Feather.x),
-            fit: BoxFit.cover,
-            height: 200.0,
-            width: 130.0,
           ),
         ),
         const SizedBox(width: 20.0),
@@ -217,37 +244,40 @@ class _CategoryChips extends StatelessWidget {
     if (entry.category == null) {
       return const SizedBox.shrink();
     } else {
-      return Wrap(
-        children: [
-          ...entry.category!.map((category) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(0.0, 5.0, 5.0, 5.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  border: Border.all(
-                    color: context.theme.colorScheme.secondary,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7.0,
-                    vertical: 5,
-                  ),
-                  child: Text(
-                    '${category.label}',
-                    style: TextStyle(
+      return Semantics(
+        label: 'Categories',
+        child: Wrap(
+          children: [
+            ...entry.category!.map((category) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(0.0, 5.0, 5.0, 5.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                    border: Border.all(
                       color: context.theme.colorScheme.secondary,
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7.0,
+                      vertical: 5,
+                    ),
+                    child: Text(
+                      '${category.label}',
+                      style: TextStyle(
+                        color: context.theme.colorScheme.secondary,
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
-        ],
+              );
+            }),
+          ],
+        ),
       );
     }
   }
@@ -348,12 +378,15 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(
-        color: context.theme.colorScheme.secondary,
-        fontSize: 20.0,
-        fontWeight: FontWeight.bold,
+    return Semantics(
+      header: true,
+      child: Text(
+        title,
+        style: TextStyle(
+          color: context.theme.colorScheme.secondary,
+          fontSize: 20.0,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -422,6 +455,7 @@ class _MoreBooksFromAuthorState extends ConsumerState<_MoreBooksFromAuthor> {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.only(top: 40.0),
+                      //Occhio alla chiarezza di linguaggio, ops può fa pensare che qualcosa sia andato storto nel caricare i dati...
                       child: Text(
                         "oops, there's no other book from this author available",
                         style: TextStyle(

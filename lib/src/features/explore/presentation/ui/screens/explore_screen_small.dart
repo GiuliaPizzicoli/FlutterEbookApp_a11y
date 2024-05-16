@@ -1,6 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ebook_app/src/common/common.dart';
+import 'package:flutter_ebook_app/src/common/presentation/ui/widgets/accessible_book_list_carousel.dart';
+import 'package:flutter_ebook_app/src/features/explore/presentation/ui/screens/components/section_book_list.dart';
 import 'package:flutter_ebook_app/src/features/features.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,6 +22,7 @@ class _ExploreScreenSmallState extends ConsumerState<ExploreScreenSmall>
 
   @override
   Widget build(BuildContext context) {
+    final mediaQueryData = MediaQuery.of(context);
     super.build(context);
     final homeDataState = ref.watch(homeFeedNotifierProvider);
     return Scaffold(
@@ -46,7 +49,12 @@ class _ExploreScreenSmallState extends ConsumerState<ExploreScreenSmall>
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10.0),
-                child: _SectionBookList(link: link),
+                child: mediaQueryData.accessibleNavigation
+                    ? AccessibleBookListCarousel(
+                        link: link,
+                        hasHeader: true,
+                      )
+                    : SectionBookList(link: link),
               );
             },
           );
@@ -64,131 +72,92 @@ class _ExploreScreenSmallState extends ConsumerState<ExploreScreenSmall>
   bool get wantKeepAlive => true;
 }
 
-class _SectionHeader extends StatelessWidget {
-  final Link link;
-  final bool hideSeeAll;
+class CarouselWidget extends StatefulWidget {
+  @override
+  _CarouselWidgetState createState() => _CarouselWidgetState();
+}
 
-  const _SectionHeader({required this.link, this.hideSeeAll = false});
+class _CarouselWidgetState extends State<CarouselWidget> {
+  final PageController _pageController = PageController(initialPage: 1);
+  int _currentPage = 1;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Flexible(
-            child: Text(
-              '${link.title}',
-              style: const TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (!hideSeeAll)
-            GestureDetector(
-              onTap: () {
-                context.router.push(
-                  GenreRoute(title: '${link.title}', url: link.href!),
-                );
-              },
-              child: Text(
-                'See All',
-                style: TextStyle(
-                  color: context.theme.colorScheme.secondary,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionBookList extends ConsumerStatefulWidget {
-  final Link link;
-
-  const _SectionBookList({required this.link});
-
-  @override
-  ConsumerState<_SectionBookList> createState() => _SectionBookListState();
-}
-
-class _SectionBookListState extends ConsumerState<_SectionBookList>
-    with AutomaticKeepAliveClientMixin {
-  final ValueNotifier<int> _bookCount = ValueNotifier<int>(0);
-
-  void _fetch() {
-    ref.read(genreFeedNotifierProvider(widget.link.href!).notifier).fetch();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        ValueListenableBuilder<int>(
-          valueListenable: _bookCount,
-          builder: (context, bookCount, _) {
-            return _SectionHeader(
-              link: widget.link,
-              hideSeeAll: bookCount < 10,
-            );
+        IconButton(
+          icon: const Icon(Icons.chevron_left),
+          onPressed: () {
+            if (_currentPage > 0) {
+              _pageController.animateToPage(
+                _currentPage - 1,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+            }
           },
         ),
-        const SizedBox(height: 10.0),
-        SizedBox(
-          height: 200,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 500),
-            child: ref
-                .watch(genreFeedNotifierProvider(widget.link.href!))
-                .maybeWhen(
-                  orElse: () => const SizedBox.shrink(),
-                  loading: () => const LoadingWidget(),
-                  data: (data) {
-                    final books = data.books;
-                    if (_bookCount.value == 0) {
-                      _bookCount.value = books.length;
-                    }
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                      scrollDirection: Axis.horizontal,
-                      itemCount: books.length,
-                      shrinkWrap: true,
-                      itemBuilder: (BuildContext context, int index) {
-                        final Entry entry = books[index];
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5.0,
-                            vertical: 10.0,
-                          ),
-                          child:
-                              BookCard(img: entry.link![1].href!, entry: entry),
-                        );
-                      },
-                    );
-                  },
-                  error: (_, __) {
-                    return MyErrorWidget(
-                      refreshCallBack: () {
-                        _fetch();
-                      },
-                    );
-                  },
+        Expanded(
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            children: [
+              Container(
+                color: Colors.red,
+                child: const Center(
+                  child: Text(
+                    'Item 1',
+                    style: TextStyle(fontSize: 24, color: Colors.white),
+                  ),
                 ),
+              ),
+              Container(
+                color: Colors.blue,
+                child: const Center(
+                  child: Text(
+                    'Item 2',
+                    style: TextStyle(fontSize: 24, color: Colors.white),
+                  ),
+                ),
+              ),
+              Container(
+                color: Colors.green,
+                child: const Center(
+                  child: Text(
+                    'Item 3',
+                    style: TextStyle(fontSize: 24, color: Colors.white),
+                  ),
+                ),
+              ),
+              Container(
+                color: Colors.orange,
+                child: const Center(
+                  child: Text(
+                    'Item 4',
+                    style: TextStyle(fontSize: 24, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
           ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_right),
+          onPressed: () {
+            if (_currentPage < 3) {
+              _pageController.animateToPage(
+                _currentPage + 1,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+            }
+          },
         ),
       ],
     );
   }
-
-  @override
-  bool get wantKeepAlive => true;
 }

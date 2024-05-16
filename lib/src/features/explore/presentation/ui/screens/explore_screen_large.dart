@@ -12,7 +12,7 @@ class ExploreScreenLarge extends StatelessWidget {
 
     return AnimatedPageSplitter(
       isExpanded: !isNestedEmpty,
-      leftChild: const ExploreScreenSmall(),
+      leftChild: ExploreScreenSmall(),
       rightChild: const AutoRouter(),
     );
   }

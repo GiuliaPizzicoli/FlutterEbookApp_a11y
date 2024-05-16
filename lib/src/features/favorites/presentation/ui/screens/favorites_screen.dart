@@ -19,25 +19,60 @@ class FavoritesScreen extends ConsumerWidget {
             orElse: () => const SizedBox.shrink(),
             data: (favorites) {
               if (favorites.isEmpty) const EmptyView();
-              return Wrap(
+              return Column(
                 children: [
-                  ...favorites.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5.0,
-                        vertical: 5.0,
-                      ),
-                      child: BookItem(
-                        img: entry.link![1].href!,
-                        title: entry.title!.t!,
-                        entry: entry,
-                      ),
-                    );
-                  }),
+                  const SizedBox(height: 20.0),
+                  const _TitleSection(),
+                  const SizedBox(height: 20.0),
+                  Wrap(
+                    children: [
+                      ...favorites.map((entry) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5.0,
+                            vertical: 5.0,
+                          ),
+                          child: BookItem(
+                            img: entry.link![1].href!,
+                            title: entry.title!.t!,
+                            entry: entry,
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
                 ],
               );
             },
           ),
+    );
+  }
+}
+
+class _TitleSection extends StatelessWidget {
+  const _TitleSection({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      header: true,
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(
+              'I tuoi libri preferiti',
+              style: TextStyle(
+                fontSize: 20.0,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

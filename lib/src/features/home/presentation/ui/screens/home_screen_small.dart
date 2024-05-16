@@ -1,6 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ebook_app/src/common/common.dart';
+import 'package:flutter_ebook_app/src/common/presentation/ui/widgets/accessible_book_list_carousel.dart';
+import 'package:flutter_ebook_app/src/common/presentation/ui/widgets/category_chip.dart';
+import 'package:flutter_ebook_app/src/common/presentation/ui/widgets/section_title.dart';
 import 'package:flutter_ebook_app/src/features/features.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -53,13 +56,15 @@ class _HomeScreenSmallState extends ConsumerState<HomeScreenSmall> {
               child: ListView(
                 children: <Widget>[
                   if (!context.isSmallScreen) const SizedBox(height: 30.0),
+                  const SizedBox(height: 20.0),
+                  const SectionTitle(title: 'Popular'),
                   FeaturedSection(popular: popular),
                   const SizedBox(height: 20.0),
-                  const _SectionTitle(title: 'Categories'),
+                  const SectionTitle(title: 'Categories'),
                   const SizedBox(height: 10.0),
                   _GenreSection(popular: popular),
                   const SizedBox(height: 20.0),
-                  const _SectionTitle(title: 'Recently Added'),
+                  const SectionTitle(title: 'Recently Added'),
                   const SizedBox(height: 20.0),
                   _NewSection(recent: recent),
                 ],
@@ -77,31 +82,6 @@ class _HomeScreenSmallState extends ConsumerState<HomeScreenSmall> {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class FeaturedSection extends StatelessWidget {
   final CategoryFeed popular;
 
@@ -109,29 +89,40 @@ class FeaturedSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 200.0,
-      child: Center(
-        child: ListView.builder(
-          primary: false,
-          padding: const EdgeInsets.symmetric(horizontal: 15.0),
-          scrollDirection: Axis.horizontal,
-          itemCount: popular.feed?.entry?.length ?? 0,
-          shrinkWrap: true,
-          itemBuilder: (BuildContext context, int index) {
-            final Entry entry = popular.feed!.entry![index];
-            return Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 5.0, vertical: 10.0),
-              child: BookCard(
-                img: entry.link![1].href!,
-                entry: entry,
+    final mediaQueryData = MediaQuery.of(context);
+
+    return mediaQueryData.accessibleNavigation
+        ? AccessibleBookListCarousel(link: popular.feed!.link![0])
+        : SizedBox(
+            height: 240.0,
+            child: Center(
+              child: ListView.builder(
+                primary: false,
+                padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                scrollDirection: Axis.horizontal,
+                itemCount: popular.feed?.entry?.length ?? 0,
+                shrinkWrap: true,
+                itemBuilder: (BuildContext context, int index) {
+                  final Entry entry = popular.feed!.entry![index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 5.0, vertical: 10.0),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 200,
+                          child: BookCard(
+                            img: entry.link![1].href!,
+                            entry: entry,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
-      ),
-    );
+            ),
+          );
   }
 }
 
@@ -160,47 +151,7 @@ class _GenreSection extends StatelessWidget {
               return const SizedBox.shrink();
             }
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 5.0,
-                vertical: 10.0,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.theme.colorScheme.secondary,
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(20.0),
-                  ),
-                ),
-                child: InkWell(
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(20.0),
-                  ),
-                  onTap: () {
-                    final route = GenreRoute(
-                      title: '${link.title}',
-                      url: link.href!,
-                    );
-                    if (context.isLargeScreen) {
-                      context.router.replace(route);
-                    } else {
-                      context.router.push(route);
-                    }
-                  },
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Text(
-                        '${link.title}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
+            return CategoryChip(link: link);
           },
         ),
       ),

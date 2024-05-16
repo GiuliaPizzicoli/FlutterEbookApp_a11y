@@ -13,6 +13,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentAppTheme = ref.watch(currentAppThemeNotifierProvider);
     return MaterialApp.router(
+      showSemanticsDebugger: false,
       debugShowCheckedModeBanner: false,
       title: appName,
       theme: themeData(

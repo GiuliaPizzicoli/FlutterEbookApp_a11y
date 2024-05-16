@@ -18,10 +18,11 @@ class _TabsScreenState extends ConsumerState<TabsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    /* WidgetsBinding.instance.addPostFrameCallback((_) {
       Logman.instance.attachOverlay(
         context: context,
-        debugPage: const DebugPage(),
+        debugPage:
+            const DebugPage(), /* 
         button: FloatingActionButton(
           elevation: 0,
           onPressed: () {},
@@ -30,9 +31,9 @@ class _TabsScreenState extends ConsumerState<TabsScreen> {
             Icons.bug_report,
             color: Colors.white,
           ),
-        ),
+        ), */
       );
-    });
+    }); */
   }
 
   @override

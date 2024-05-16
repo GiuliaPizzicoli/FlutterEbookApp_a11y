@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_ebook_app/src/common/common.dart';
 
 class DescriptionTextWidget extends StatefulWidget {
@@ -77,6 +78,9 @@ class _DescriptionTextWidgetState extends State<DescriptionTextWidget> {
                     ],
                   ),
                   onTap: () {
+                    if (flag) {
+                      SemanticsService.announce(secondHalf, TextDirection.ltr);
+                    }
                     setState(() {
                       flag = !flag;
                     });

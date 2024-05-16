@@ -23,7 +23,7 @@ class LazyZipDecoder {
 
         // The attributes are stored in base 8
         final mode = zfh.externalFileAttributes;
-        final compress = zf.compressionMethod != a.ZipFile.STORE;
+        //final compress = zf.compressionMethod != a.ZipFile.STORE;
 
         LazyArchiveFile file = LazyArchiveFile(
             zfh, zf.filename, zf.uncompressedSize, zf.compressionMethod);
@@ -41,7 +41,7 @@ class LazyZipDecoder {
         }
 
         file.crc32 = zf.crc32;
-        file.compress = compress;
+        file.compress = false;
         file.lastModTime = zf.lastModFileDate << 16 | zf.lastModFileTime;
 
         archive.addFile(file);

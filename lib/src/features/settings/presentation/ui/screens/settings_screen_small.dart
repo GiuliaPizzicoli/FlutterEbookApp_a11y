@@ -48,6 +48,7 @@ class _SettingsScreenSmallState extends State<SettingsScreenSmall> {
 
   @override
   Widget build(BuildContext context) {
+    var numberOfItems = items.length;
     return Scaffold(
       appBar: context.isSmallScreen
           ? AppBar(
@@ -65,26 +66,36 @@ class _SettingsScreenSmallState extends State<SettingsScreenSmall> {
             itemCount: items.length,
             itemBuilder: (BuildContext context, int index) {
               if (items[index]['title'] == 'Dark Mode') {
-                if (context.isPlatformDarkThemed) {
+                /* if (context.isPlatformDarkThemed) {
+                  numberOfItems = items.length - 1;
                   return const SizedBox.shrink();
-                }
-                return _ThemeSwitch(
-                  icon: items[index]['icon'] as IconData,
-                  title: items[index]['title'] as String,
+                } */
+                return MergeSemantics(
+                  child: Semantics(
+                    label: 'Elemento ${index + 1} di ${numberOfItems}',
+                    child: _ThemeSwitch(
+                      icon: items[index]['icon'] as IconData,
+                      title: items[index]['title'] as String,
+                    ),
+                  ),
                 );
               }
 
-              return ListTile(
-                onTap: items[index]['function'] as Function(),
-                leading: Icon(items[index]['icon'] as IconData),
-                title: Text(items[index]['title'] as String),
+              return Semantics(
+                label: 'Elemento ${index + 1} di ${numberOfItems}',
+                button: true,
+                child: ListTile(
+                  onTap: items[index]['function'] as Function(),
+                  leading: Icon(items[index]['icon'] as IconData),
+                  title: Text(items[index]['title'] as String),
+                ),
               );
             },
             separatorBuilder: (BuildContext context, int index) {
-              if (items[index]['title'] == 'Dark Mode' &&
+              /* if (items[index]['title'] == 'Dark Mode' &&
                   context.isPlatformDarkThemed) {
                 return const SizedBox.shrink();
-              }
+              } */
               return const Divider();
             },
           ),
